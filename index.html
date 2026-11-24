@@ -1,76 +1,133 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
+<html lang="ja" style="--font-size: 18px; --line-h: 36px;"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>縦書き資料作文ワークシート</title>
   
-  <!-- Noto Serif JP & Tailwind CSS -->
+  <!-- Google Fonts: BIZ UDMincho, Noto Serif JP -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDMincho&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDMincho:wght@400;700&amp;family=Noto+Serif+JP:wght@400;700&amp;display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    /* 縦書き基盤設定 */
+    /* CSS変数：偶数pxで定義 */
     :root {
-      --font-size: 17px;
-      --line-h: 34px;
+      --font-size: 18px;
+      --line-h: 36px;
+      --line-color: #cbd5e1;
     }
 
     body {
-      font-family: "BIZ UDMincho", "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "Noto Serif JP", serif;
+      font-family: "BIZ UDMincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+      background-color: #1e293b;
+      margin: 0;
+      padding: 0;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
 
-    .tategaki {
-      writing-mode: vertical-rl;
-      -webkit-writing-mode: vertical-rl;
-      text-orientation: mixed;
-      font-feature-settings: "palt" 0;
-      font-size: var(--font-size);
-      line-height: var(--line-h);
+    /* A4 横向き 用紙コンテナ */
+    .sheet-paper {
+      width: 1060px;
+      height: 720px;
+      background-color: #ffffff;
+      padding: 32px 40px;
+      box-sizing: border-box;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+      position: relative;
     }
 
-    /* ズレない縦罫線（textareaに直接背景描画してスクロールと完全同期） */
+    /* 縦書きテキスト領域の単一基本スタイル */
+    .v-text {
+      writing-mode: vertical-rl;
+      -webkit-writing-mode: vertical-rl;
+      text-orientation: upright;
+      -webkit-text-orientation: upright;
+      font-size: var(--font-size);
+      line-height: var(--line-h) !important;
+      font-feature-settings: "palt" 0;
+      font-variant-east-asian: full-width;
+      letter-spacing: 0 !important;
+      word-break: break-all;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      user-select: text;
+      -webkit-user-select: text;
+      cursor: text;
+      outline: none;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* contenteditable 内の改行用ブロック要素リセット */
+    .v-text div,
+    .v-text p {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      font-size: inherit !important;
+      line-height: var(--line-h) !important;
+      font-family: inherit !important;
+      letter-spacing: 0 !important;
+    }
+
+    /* 精密な縦罫線背景 */
     .grid-lines-on {
       background-image: repeating-linear-gradient(
         to left,
-        rgba(148, 163, 184, 0.4) 0px,
-        rgba(148, 163, 184, 0.4) 1px,
-        transparent 1px,
-        transparent var(--line-h)
+        transparent 0px,
+        transparent calc(var(--line-h) - 1px),
+        var(--line-color) calc(var(--line-h) - 1px),
+        var(--line-color) var(--line-h)
       );
       background-position: right top;
+      background-size: var(--line-h) 100%;
       background-attachment: local;
-      background-size: auto 100%;
     }
 
-    /* 縦書きテキストエリア共通スタイリング */
-    .vert-input {
-      background-color: transparent;
-      resize: none;
-      outline: none;
-      border: none;
-      padding: 0;
-      margin: 0;
-      box-sizing: content-box;
-      overflow-y: hidden;
+    /* エディタ要素本体 */
+    .v-editor {
+      display: block;
+      width: 100%;
+      height: 100%;
       overflow-x: auto;
-      letter-spacing: 0.05em;
+      overflow-y: hidden;
+      position: relative;
     }
 
-    .vert-input::placeholder {
+    /* フォーカス時ハイライト */
+    .v-editor:focus {
+      outline: 2px solid #3b82f6;
+      outline-offset: -1px;
+    }
+
+    /* プレースホルダー（入力なし時に表示） */
+    .v-editor:empty::before {
+      content: attr(data-placeholder);
       color: #94a3b8;
+      pointer-events: none;
+      display: block;
       font-weight: normal;
     }
 
-    /* 印刷スタイル */
+    /* スクロールバー整形 */
+    .v-editor::-webkit-scrollbar {
+      height: 6px;
+    }
+    .v-editor::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 3px;
+    }
+
+    /* 印刷スタイル (@media print) */
     @media print {
       @page {
         size: A4 landscape;
-        margin: 0;
+        margin: 8mm;
       }
       body {
         background: #ffffff !important;
@@ -80,105 +137,91 @@
       .no-print {
         display: none !important;
       }
-      .print-wrapper {
+      .print-container {
         padding: 0 !important;
         margin: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-      }
-      .a4-paper {
-        box-shadow: none !important;
-        border: none !important;
-        width: 297mm !important;
-        height: 210mm !important;
-        padding: 12mm 15mm !important;
-        margin: 0 !important;
-      }
-      /* 印刷時はtextareaを非表示にし、ミリ秒同期したdivで印刷 */
-      .vert-input {
-        display: none !important;
-      }
-      .print-mirror {
         display: block !important;
       }
-      /* 印刷時に未入力枠や点線を綺麗に調整 */
+      .sheet-paper {
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .v-editor:focus {
+        outline: none !important;
+      }
+      .v-editor:empty::before {
+        display: none !important;
+      }
       .empty-slot-print {
         border-color: transparent !important;
         background: transparent !important;
       }
-      .placeholder-text-print {
-        display: none !important;
+      .print-hide-placeholder::placeholder {
+        color: transparent !important;
+      }
+      .print-border-none {
+        border: none !important;
       }
     }
-
-    .print-mirror {
-      display: none;
-      white-space: pre-wrap;
-      word-break: break-all;
-      overflow: hidden;
-    }
-
-    /* スクロールバーの非表示 */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
-</head>
-<body class="bg-slate-700 text-slate-800 min-h-screen flex flex-col antialiased">
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.relative{position:relative}.sticky{position:sticky}.top-0{top:0px}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.ml-2{margin-left:0.5rem}.mb-0\.5{margin-bottom:0.125rem}.mb-1{margin-bottom:0.25rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.flex{display:flex}.hidden{display:none}.h-full{height:100%}.min-h-screen{min-height:100vh}.w-full{width:100%}.w-2\/5{width:40%}.max-w-7xl{max-width:80rem}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.flex-row-reverse{flex-direction:row-reverse}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.overflow-auto{overflow:auto}.overflow-hidden{overflow:hidden}.rounded{border-radius:0.25rem}.rounded-sm{border-radius:0.125rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-l{border-left-width:1px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-dashed{border-style:dashed}.border-slate-600{--tw-border-opacity:1;border-color:rgb(71 85 105 / var(--tw-border-opacity, 1))}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.border-slate-200\/60{border-color:rgb(226 232 240 / 0.6)}.border-slate-300{--tw-border-opacity:1;border-color:rgb(203 213 225 / var(--tw-border-opacity, 1))}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-slate-700{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-slate-50\/50{background-color:rgb(248 250 252 / 0.5)}.bg-transparent{background-color:transparent}.bg-white\/60{background-color:rgb(255 255 255 / 0.6)}.p-6{padding:1.5rem}.p-2{padding:0.5rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.pb-0\.5{padding-bottom:0.125rem}.pl-2{padding-left:0.5rem}.pr-6{padding-right:1.5rem}.pt-0\.5{padding-top:0.125rem}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.font-sans{font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"}.text-\[11px\]{font-size:11px}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xs{font-size:0.75rem;line-height:1rem}.text-\[10px\]{font-size:10px}.text-xl{font-size:1.25rem;line-height:1.75rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.tracking-wide{letter-spacing:0.025em}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-slate-100{--tw-text-opacity:1;color:rgb(241 245 249 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.accent-emerald-500{accent-color:#10b981}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.outline-none{outline:2px solid transparent;outline-offset:2px}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.placeholder\:text-slate-400::placeholder{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.hover\:border-slate-400:hover{--tw-border-opacity:1;border-color:rgb(148 163 184 / var(--tw-border-opacity, 1))}.hover\:bg-emerald-500:hover{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-700:hover{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}</style></head>
+<body class="min-h-screen flex flex-col text-slate-800 antialiased">
 
-  <!-- ================= TOOLBAR (NO-PRINT) ================= -->
-  <header class="no-print bg-slate-900 text-slate-100 shadow-md sticky top-0 z-30 font-sans text-xs border-b border-slate-800">
+  <!-- ================= 上部ツールバー (非印刷) ================= -->
+  <header class="no-print bg-slate-900 text-slate-100 shadow-lg sticky top-0 z-50 font-sans text-xs border-b border-slate-700">
     <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
       
-      <!-- Title -->
+      <!-- タイトル -->
       <div class="flex items-center gap-2">
         <span class="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold text-[11px]">国語</span>
         <h1 class="font-bold text-sm tracking-wide">縦書き資料作文ワークシート</h1>
       </div>
 
-      <!-- Controls -->
+      <!-- コントロール群 -->
       <div class="flex flex-wrap items-center gap-3">
         
-        <!-- Layout Selection -->
+        <!-- レイアウト切り替え -->
         <div class="flex items-center gap-1.5 bg-slate-800 px-2.5 py-1 rounded border border-slate-700">
           <span class="text-slate-400 font-medium">配置:</span>
           <select id="layoutSelect" onchange="setLayout(this.value)" class="bg-slate-700 text-white rounded px-2 py-0.5 outline-none border border-slate-600 cursor-pointer">
+            <option value="left2" selected="">左に資料 (2つ)</option>
             <option value="left1">左に資料 (1つ)</option>
-            <option value="left2" selected>左に資料 (2つ)</option>
             <option value="bottom2">下に資料 (2つ)</option>
-            <option value="split">左右文章 / 中央資料</option>
+            <option value="split">左右分割 (文章/資料/文章)</option>
           </select>
         </div>
 
-        <!-- Font Size Selection -->
+        <!-- 文字サイズ切り替え -->
         <div class="flex items-center gap-1.5 bg-slate-800 px-2.5 py-1 rounded border border-slate-700">
-          <span class="text-slate-400 font-medium">文字:</span>
+          <span class="text-slate-400 font-medium">文字サイズ:</span>
           <select id="fontSizeSelect" onchange="setFontSize(this.value)" class="bg-slate-700 text-white rounded px-2 py-0.5 outline-none border border-slate-600 cursor-pointer">
-            <option value="sm">小 (14px / 28px行幅)</option>
-            <option value="md" selected>中 (17px / 34px行幅)</option>
-            <option value="lg">大 (20px / 40px行幅)</option>
+            <option value="sm">小 (16px/32px)</option>
+            <option value="md" selected="">中 (18px/36px)</option>
+            <option value="lg">大 (22px/44px)</option>
           </select>
         </div>
 
-        <!-- Grid Lines Toggle -->
+        <!-- 縦罫線 Toggle -->
         <label class="flex items-center gap-1.5 bg-slate-800 px-2.5 py-1 rounded border border-slate-700 cursor-pointer hover:bg-slate-750">
-          <input type="checkbox" id="linesToggle" onchange="toggleLines(this.checked)" checked class="rounded accent-emerald-500">
+          <input type="checkbox" id="linesToggle" onchange="toggleLines(this.checked)" checked="" class="rounded accent-emerald-500">
           <span class="text-slate-300">縦罫線</span>
         </label>
 
-        <!-- Counter -->
+        <!-- 文字数カウンター -->
         <div class="bg-slate-800 px-3 py-1 rounded border border-slate-700 font-mono text-slate-300">
-          本文: <span id="charCount" class="font-bold text-emerald-400">0</span> 字
+          本文 <span id="charCount" class="font-bold text-emerald-400">1</span> 字
         </div>
 
-        <!-- Action Buttons -->
+        <!-- ボタン群 -->
         <div class="flex items-center gap-2 ml-2">
           <button onclick="clearAll()" title="白紙に戻す" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 px-3 py-1 rounded transition flex items-center gap-1">
-            <span>🗑️</span> リセット
+            <span>🗑️</span> 全消去
           </button>
-          <button onclick="window.print()" title="A4横向き印刷・PDF保存" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-1 rounded shadow transition flex items-center gap-1">
+          <button onclick="window.print()" title="印刷・PDF保存" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-1 rounded shadow transition flex items-center gap-1">
             <span>🖨️</span> 印刷 / PDF
           </button>
         </div>
@@ -187,320 +230,425 @@
     </div>
   </header>
 
-  <!-- ================= MAIN PAPER CONTAINER ================= -->
-  <main class="flex-1 flex justify-center items-center p-4 sm:p-8 print-wrapper overflow-auto">
+  <!-- ================= 用紙表示エリア ================= -->
+  <main class="flex-1 flex justify-center items-center p-6 print-container overflow-auto">
     
-    <!-- A4 Landscape Sheet (Fixed 297mm x 210mm Ratio) -->
-    <div id="paper" class="a4-paper bg-white shadow-2xl rounded-sm relative flex flex-col justify-between transition-all duration-200" style="width: 1000px; height: 707px; padding: 40px 48px;">
-      
-      <!-- Dynamic Content Layout -->
+    <!-- A4 横向き ワークシート本体 -->
+    <div id="paperSheet" class="sheet-paper rounded-sm">
       <div id="paperContent" class="w-full h-full flex flex-row-reverse gap-6">
-        <!-- JS will render layout here -->
-      </div>
+          <!-- 右側：縦書き文章エリア (横書きflex containerで右から左へ並べる) -->
+          <div class="flex-1 h-full flex flex-row-reverse overflow-hidden">
+            <!-- 題名欄 (1行固定) -->
+            <div class="h-full shrink-0 relative" style="width: 36px;">
+              <div id="txtTitle" contenteditable="true" data-placeholder="題名" class="v-text v-editor grid-lines-on text-center font-bold" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"><br></div>
+            </div>
+            <!-- 名前欄 (1行固定) -->
+            <div class="h-full shrink-0 relative border-l border-slate-200" style="width: 36px;">
+              <div id="txtAuthor" contenteditable="true" data-placeholder="年・名前" class="v-text v-editor grid-lines-on text-right text-slate-700" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
+            </div>
+            <!-- 本文欄 -->
+            <div class="h-full flex-1 relative overflow-hidden pl-2 body-box" onclick="focusEditor('txtBody1')">
+              <div id="bodyBoxContainer1" class="w-full h-full">
+                <div id="txtBody1" contenteditable="true" data-placeholder="ここに本文を入力…" class="v-text v-editor grid-lines-on" oninput="onTextChange()" onpaste="handlePaste(event)" style="width: 468px;">あ</div>
+              </div>
+            </div>
+          </div>
 
+          <!-- 左側：資料エリア (2段) -->
+          <div class="w-2/5 h-full flex flex-col gap-4 border-r border-slate-200 pr-6">
+            <div class="flex-1 overflow-hidden">
+        <div onclick="selectMaterialSlot(0)" class="w-full h-full flex flex-col justify-between border border-slate-300 rounded p-2 bg-slate-50/50 relative group empty-slot-print">
+          <!-- 1. 見出し入力 -->
+          <div class="shrink-0 mb-1 border-b border-slate-200 pb-0.5">
+            <input type="text" value="資料①" oninput="updateMaterialTitle(0, this.value)" placeholder="見出し（例：資料①）" class="w-full bg-transparent font-bold text-xs text-slate-700 outline-none print-hide-placeholder">
+          </div>
+
+          <!-- 2. 画像プレビュー / ドロップエリア -->
+          <div onclick="triggerFileInput(0)" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 0)" class="flex-1 border border-dashed border-slate-300 hover:border-slate-400 bg-white/60 rounded flex items-center justify-center overflow-hidden cursor-pointer relative transition">
+            
+              <div class="text-center p-2 select-none print-hide-placeholder">
+                <div class="text-xl text-slate-400 mb-0.5">📷</div>
+                <p class="text-xs font-bold text-slate-500">画像を選択 / ドロップ</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">（Ctrl+V で貼付け可能）</p>
+              </div>
+            
+          </div>
+
+          <!-- 3. 出典・参考欄 -->
+          <div class="mt-1 shrink-0 border-t border-slate-200/60 pt-0.5">
+            <input type="text" value="" oninput="updateMaterialSource(0, this.value)" placeholder="出典・参考（例：環境省データより作成）" class="w-full bg-transparent text-[11px] text-slate-500 outline-none placeholder:text-slate-400 print-hide-placeholder">
+          </div>
+        </div>
+      </div>
+            <div class="flex-1 overflow-hidden">
+        <div onclick="selectMaterialSlot(1)" class="w-full h-full flex flex-col justify-between border border-slate-300 rounded p-2 bg-slate-50/50 relative group empty-slot-print">
+          <!-- 1. 見出し入力 -->
+          <div class="shrink-0 mb-1 border-b border-slate-200 pb-0.5">
+            <input type="text" value="資料②" oninput="updateMaterialTitle(1, this.value)" placeholder="見出し（例：資料①）" class="w-full bg-transparent font-bold text-xs text-slate-700 outline-none print-hide-placeholder">
+          </div>
+
+          <!-- 2. 画像プレビュー / ドロップエリア -->
+          <div onclick="triggerFileInput(1)" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 1)" class="flex-1 border border-dashed border-slate-300 hover:border-slate-400 bg-white/60 rounded flex items-center justify-center overflow-hidden cursor-pointer relative transition">
+            
+              <div class="text-center p-2 select-none print-hide-placeholder">
+                <div class="text-xl text-slate-400 mb-0.5">📷</div>
+                <p class="text-xs font-bold text-slate-500">画像を選択 / ドロップ</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">（Ctrl+V で貼付け可能）</p>
+              </div>
+            
+          </div>
+
+          <!-- 3. 出典・参考欄 -->
+          <div class="mt-1 shrink-0 border-t border-slate-200/60 pt-0.5">
+            <input type="text" value="" oninput="updateMaterialSource(1, this.value)" placeholder="出典・参考（例：環境省データより作成）" class="w-full bg-transparent text-[11px] text-slate-500 outline-none placeholder:text-slate-400 print-hide-placeholder">
+          </div>
+        </div>
+      </div>
+          </div>
+        </div>
     </div>
 
   </main>
 
-  <!-- Hidden File Input for Image Upload -->
+  <!-- 非表示の画像ファイル入力 -->
   <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageFile(event)">
 
   <!-- ================= JAVASCRIPT ================= -->
   <script>
-    // System State
+    // アプリケーション状態
     const state = {
-      layout: 'left2', 
-      fontSize: 'md', 
+      layout: 'left2',
+      fontSize: 'md',
       showLines: true,
       title: '',
       author: '',
       body1: '',
       body2: '',
       materials: [
-        { title: '資料①', image: '' },
-        { title: '資料②', image: '' }
+        { title: '資料①', image: '', source: '', fit: 'contain' },
+        { title: '資料②', image: '', source: '', fit: 'contain' }
       ]
     };
 
-    // Font Spec: Exact Integer Pixels for 100% Alignment
+    // 偶数ピクセル仕様（文字サイズ / 行高）
     const fontSpecs = {
-      sm: { size: 14, line: 28 },
-      md: { size: 17, line: 34 },
-      lg: { size: 20, line: 40 }
+      sm: { size: 16, line: 32 },
+      md: { size: 18, line: 36 },
+      lg: { size: 22, line: 44 }
     };
 
     let activeMaterialIndex = null;
+    let selectedMaterialIndex = 0;
     let resizeObserver = null;
 
+    // 初期化
     window.addEventListener('DOMContentLoaded', () => {
       loadState();
-      setupPasteListener();
-      updateCSSVariables();
+      setupGlobalPaste();
       render();
 
-      // Window resize handler
-      window.addEventListener('resize', () => {
-        snapTextareaWidths();
-      });
+      // 初回自動フォーカス
+      setTimeout(() => {
+        focusEditor('txtBody1');
+      }, 200);
     });
 
+    // CSS変数の更新
     function updateCSSVariables() {
       const spec = fontSpecs[state.fontSize] || fontSpecs.md;
       document.documentElement.style.setProperty('--font-size', `${spec.size}px`);
       document.documentElement.style.setProperty('--line-h', `${spec.line}px`);
     }
 
-    // Main Layout Renderer
+    // 全体レンダリング
     function render() {
       updateCSSVariables();
+      if (resizeObserver) resizeObserver.disconnect();
+
       const container = document.getElementById('paperContent');
       container.innerHTML = '';
-
-      const lineClass = state.showLines ? 'grid-lines-on' : '';
       const lineH = fontSpecs[state.fontSize].line;
+      const lineClass = state.showLines ? 'grid-lines-on' : '';
 
-      // -----------------------------------------------------------------
-      // LAYOUT 1: LEFT 1 MATERIAL (右本文 + 左資料1つ)
-      // -----------------------------------------------------------------
-      if (state.layout === 'left1') {
+      // 1. 左に資料 (2つ)
+      if (state.layout === 'left2') {
         container.className = "w-full h-full flex flex-row-reverse gap-6";
         container.innerHTML = `
-          <!-- 本文エリア（縦書き） -->
-          <div class="flex-1 h-full flex flex-row-reverse tategaki overflow-hidden">
-            <!-- 題名欄（1行固定） -->
+          <!-- 右側：縦書き文章エリア (横書きflex containerで右から左へ並べる) -->
+          <div class="flex-1 h-full flex flex-row-reverse overflow-hidden">
+            <!-- 題名欄 (1行固定) -->
             <div class="h-full shrink-0 relative" style="width: ${lineH}px;">
-              <textarea id="txtTitle" class="vert-input ${lineClass} h-full text-center font-bold" style="width: ${lineH}px;" placeholder="題名" oninput="onTextChange()">${escapeHTML(state.title)}</textarea>
-              <div id="mirrorTitle" class="print-mirror tategaki h-full text-center font-bold" style="width: ${lineH}px;"></div>
+              <div id="txtTitle" contenteditable="true" data-placeholder="題名" class="v-text v-editor ${lineClass} text-center font-bold" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
             </div>
-            <!-- 名前欄（1行固定） -->
+            <!-- 名前欄 (1行固定) -->
             <div class="h-full shrink-0 relative border-l border-slate-200" style="width: ${lineH}px;">
-              <textarea id="txtAuthor" class="vert-input ${lineClass} h-full text-right text-slate-700" style="width: ${lineH}px;" placeholder="〇年〇組 名前" oninput="onTextChange()">${escapeHTML(state.author)}</textarea>
-              <div id="mirrorAuthor" class="print-mirror tategaki h-full text-right text-slate-700" style="width: ${lineH}px;"></div>
+              <div id="txtAuthor" contenteditable="true" data-placeholder="年・名前" class="v-text v-editor ${lineClass} text-right text-slate-700" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
             </div>
-            <!-- 本文欄（可変スナップ幅） -->
-            <div id="bodyBox1" class="h-full flex-1 relative overflow-hidden pl-2">
-              <textarea id="txtBody1" class="vert-input ${lineClass} h-full w-full" placeholder="ここから縦書きで文章を入力します…" oninput="onTextChange()">${escapeHTML(state.body1)}</textarea>
-              <div id="mirrorBody1" class="print-mirror tategaki h-full w-full"></div>
+            <!-- 本文欄 -->
+            <div class="h-full flex-1 relative overflow-hidden pl-2 body-box" onclick="focusEditor('txtBody1')">
+              <div id="bodyBoxContainer1" class="w-full h-full">
+                <div id="txtBody1" contenteditable="true" data-placeholder="ここに本文を入力…" class="v-text v-editor ${lineClass}" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
+              </div>
             </div>
           </div>
 
-          <!-- 資料エリア（左側1つ） -->
-          <div class="w-2/5 h-full flex flex-col horizontal-tb border-r border-slate-200 pr-6">
-            ${renderMaterialSlot(0, 'h-full')}
+          <!-- 左側：資料エリア (2段) -->
+          <div class="w-2/5 h-full flex flex-col gap-4 border-r border-slate-200 pr-6">
+            <div class="flex-1 overflow-hidden">${renderMaterialSlot(0)}</div>
+            <div class="flex-1 overflow-hidden">${renderMaterialSlot(1)}</div>
+          </div>
+        `;
+      }
+      
+      // 2. 左に資料 (1つ)
+      else if (state.layout === 'left1') {
+        container.className = "w-full h-full flex flex-row-reverse gap-6";
+        container.innerHTML = `
+          <div class="flex-1 h-full flex flex-row-reverse overflow-hidden">
+            <div class="h-full shrink-0 relative" style="width: ${lineH}px;">
+              <div id="txtTitle" contenteditable="true" data-placeholder="題名" class="v-text v-editor ${lineClass} text-center font-bold" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
+            </div>
+            <div class="h-full shrink-0 relative border-l border-slate-200" style="width: ${lineH}px;">
+              <div id="txtAuthor" contenteditable="true" data-placeholder="年・名前" class="v-text v-editor ${lineClass} text-right text-slate-700" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
+            </div>
+            <div class="h-full flex-1 relative overflow-hidden pl-2 body-box" onclick="focusEditor('txtBody1')">
+              <div id="bodyBoxContainer1" class="w-full h-full">
+                <div id="txtBody1" contenteditable="true" data-placeholder="ここに本文を入力…" class="v-text v-editor ${lineClass}" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-2/5 h-full flex flex-col border-r border-slate-200 pr-6">
+            <div class="h-full overflow-hidden">${renderMaterialSlot(0)}</div>
           </div>
         `;
       }
 
-      // -----------------------------------------------------------------
-      // LAYOUT 2: LEFT 2 MATERIALS (右本文 + 左資料2つ上下)
-      // -----------------------------------------------------------------
-      else if (state.layout === 'left2') {
-        container.className = "w-full h-full flex flex-row-reverse gap-6";
-        container.innerHTML = `
-          <!-- 本文エリア（縦書き） -->
-          <div class="flex-1 h-full flex flex-row-reverse tategaki overflow-hidden">
-            <div class="h-full shrink-0 relative" style="width: ${lineH}px;">
-              <textarea id="txtTitle" class="vert-input ${lineClass} h-full text-center font-bold" style="width: ${lineH}px;" placeholder="題名" oninput="onTextChange()">${escapeHTML(state.title)}</textarea>
-              <div id="mirrorTitle" class="print-mirror tategaki h-full text-center font-bold" style="width: ${lineH}px;"></div>
-            </div>
-            <div class="h-full shrink-0 relative border-l border-slate-200" style="width: ${lineH}px;">
-              <textarea id="txtAuthor" class="vert-input ${lineClass} h-full text-right text-slate-700" style="width: ${lineH}px;" placeholder="〇年〇組 名前" oninput="onTextChange()">${escapeHTML(state.author)}</textarea>
-              <div id="mirrorAuthor" class="print-mirror tategaki h-full text-right text-slate-700" style="width: ${lineH}px;"></div>
-            </div>
-            <div id="bodyBox1" class="h-full flex-1 relative overflow-hidden pl-2">
-              <textarea id="txtBody1" class="vert-input ${lineClass} h-full w-full" placeholder="ここから縦書きで文章を入力します…" oninput="onTextChange()">${escapeHTML(state.body1)}</textarea>
-              <div id="mirrorBody1" class="print-mirror tategaki h-full w-full"></div>
-            </div>
-          </div>
-
-          <!-- 資料エリア（左側2つ上下） -->
-          <div class="w-2/5 h-full flex flex-col gap-4 horizontal-tb border-r border-slate-200 pr-6">
-            <div class="flex-1 overflow-hidden">${renderMaterialSlot(0, 'h-full')}</div>
-            <div class="flex-1 overflow-hidden">${renderMaterialSlot(1, 'h-full')}</div>
-          </div>
-        `;
-      }
-
-      // -----------------------------------------------------------------
-      // LAYOUT 3: BOTTOM 2 MATERIALS (上本文 + 下資料2つ左右)
-      // -----------------------------------------------------------------
+      // 3. 下に資料 (2つ)
       else if (state.layout === 'bottom2') {
         container.className = "w-full h-full flex flex-col justify-between gap-4";
         container.innerHTML = `
-          <!-- 本文エリア（縦書き） -->
-          <div class="flex-1 w-full flex flex-row-reverse tategaki overflow-hidden pb-2">
+          <div class="flex-1 w-full flex flex-row-reverse overflow-hidden pb-2">
             <div class="h-full shrink-0 relative" style="width: ${lineH}px;">
-              <textarea id="txtTitle" class="vert-input ${lineClass} h-full text-center font-bold" style="width: ${lineH}px;" placeholder="題名" oninput="onTextChange()">${escapeHTML(state.title)}</textarea>
-              <div id="mirrorTitle" class="print-mirror tategaki h-full text-center font-bold" style="width: ${lineH}px;"></div>
+              <div id="txtTitle" contenteditable="true" data-placeholder="題名" class="v-text v-editor ${lineClass} text-center font-bold" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
             </div>
             <div class="h-full shrink-0 relative border-l border-slate-200" style="width: ${lineH}px;">
-              <textarea id="txtAuthor" class="vert-input ${lineClass} h-full text-right text-slate-700" style="width: ${lineH}px;" placeholder="〇年〇組 名前" oninput="onTextChange()">${escapeHTML(state.author)}</textarea>
-              <div id="mirrorAuthor" class="print-mirror tategaki h-full text-right text-slate-700" style="width: ${lineH}px;"></div>
+              <div id="txtAuthor" contenteditable="true" data-placeholder="年・名前" class="v-text v-editor ${lineClass} text-right text-slate-700" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
             </div>
-            <div id="bodyBox1" class="h-full flex-1 relative overflow-hidden pl-2">
-              <textarea id="txtBody1" class="vert-input ${lineClass} h-full w-full" placeholder="ここから縦書きで文章を入力します…" oninput="onTextChange()">${escapeHTML(state.body1)}</textarea>
-              <div id="mirrorBody1" class="print-mirror tategaki h-full w-full"></div>
+            <div class="h-full flex-1 relative overflow-hidden pl-2 body-box" onclick="focusEditor('txtBody1')">
+              <div id="bodyBoxContainer1" class="w-full h-full">
+                <div id="txtBody1" contenteditable="true" data-placeholder="ここに本文を入力…" class="v-text v-editor ${lineClass}" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
+              </div>
             </div>
           </div>
 
-          <!-- 資料エリア（下側2つ左右） -->
-          <div class="h-52 grid grid-cols-2 gap-4 horizontal-tb pt-3 border-t border-slate-200 shrink-0">
-            ${renderMaterialSlot(0, 'h-full')}
-            ${renderMaterialSlot(1, 'h-full')}
+          <div class="h-56 grid grid-cols-2 gap-4 pt-3 border-t border-slate-200 shrink-0">
+            ${renderMaterialSlot(0)}
+            ${renderMaterialSlot(1)}
           </div>
         `;
       }
 
-      // -----------------------------------------------------------------
-      // LAYOUT 4: SPLIT (右文章前半 + 中央資料 + 左文章後半)
-      // -----------------------------------------------------------------
+      // 4. 左右分割 (文章 / 資料 / 文章)
       else if (state.layout === 'split') {
         container.className = "w-full h-full flex flex-row-reverse gap-4";
         container.innerHTML = `
-          <!-- 右本文エリア -->
-          <div class="flex-1 h-full flex flex-row-reverse tategaki overflow-hidden">
+          <!-- 右側：文章前半 -->
+          <div class="flex-1 h-full flex flex-row-reverse overflow-hidden">
             <div class="h-full shrink-0 relative" style="width: ${lineH}px;">
-              <textarea id="txtTitle" class="vert-input ${lineClass} h-full text-center font-bold" style="width: ${lineH}px;" placeholder="題名" oninput="onTextChange()">${escapeHTML(state.title)}</textarea>
-              <div id="mirrorTitle" class="print-mirror tategaki h-full text-center font-bold" style="width: ${lineH}px;"></div>
+              <div id="txtTitle" contenteditable="true" data-placeholder="題名" class="v-text v-editor ${lineClass} text-center font-bold" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
             </div>
             <div class="h-full shrink-0 relative border-l border-slate-200" style="width: ${lineH}px;">
-              <textarea id="txtAuthor" class="vert-input ${lineClass} h-full text-right text-slate-700" style="width: ${lineH}px;" placeholder="〇年〇組 名前" oninput="onTextChange()">${escapeHTML(state.author)}</textarea>
-              <div id="mirrorAuthor" class="print-mirror tategaki h-full text-right text-slate-700" style="width: ${lineH}px;"></div>
+              <div id="txtAuthor" contenteditable="true" data-placeholder="年・名前" class="v-text v-editor ${lineClass} text-right text-slate-700" onkeydown="handleSingleLineKeydown(event)" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
             </div>
-            <div id="bodyBox1" class="h-full flex-1 relative overflow-hidden pl-2">
-              <textarea id="txtBody1" class="vert-input ${lineClass} h-full w-full" placeholder="文章（前半）を入力…" oninput="onTextChange()">${escapeHTML(state.body1)}</textarea>
-              <div id="mirrorBody1" class="print-mirror tategaki h-full w-full"></div>
+            <div class="h-full flex-1 relative overflow-hidden pl-2 body-box" onclick="focusEditor('txtBody1')">
+              <div id="bodyBoxContainer1" class="w-full h-full">
+                <div id="txtBody1" contenteditable="true" data-placeholder="文章（前半）を入力…" class="v-text v-editor ${lineClass}" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
+              </div>
             </div>
           </div>
 
-          <!-- 中央資料エリア -->
-          <div class="w-1/3 h-full flex flex-col gap-3 horizontal-tb px-3 border-x border-slate-200">
-            <div class="flex-1 overflow-hidden">${renderMaterialSlot(0, 'h-full')}</div>
-            <div class="flex-1 overflow-hidden">${renderMaterialSlot(1, 'h-full')}</div>
+          <!-- 中央：資料2つ -->
+          <div class="w-1/3 h-full flex flex-col gap-3 px-3 border-x border-slate-200">
+            <div class="flex-1 overflow-hidden">${renderMaterialSlot(0)}</div>
+            <div class="flex-1 overflow-hidden">${renderMaterialSlot(1)}</div>
           </div>
 
-          <!-- 左本文エリア（後半） -->
-          <div class="flex-1 h-full flex flex-row-reverse tategaki overflow-hidden">
-            <div id="bodyBox2" class="h-full flex-1 relative overflow-hidden pl-2">
-              <textarea id="txtBody2" class="vert-input ${lineClass} h-full w-full" placeholder="文章（後半・まとめ）を入力…" oninput="onTextChange()">${escapeHTML(state.body2)}</textarea>
-              <div id="mirrorBody2" class="print-mirror tategaki h-full w-full"></div>
+          <!-- 左側：文章後半 -->
+          <div class="flex-1 h-full flex flex-row-reverse overflow-hidden">
+            <div class="h-full flex-1 relative overflow-hidden pl-2 body-box" onclick="focusEditor('txtBody2')">
+              <div id="bodyBoxContainer2" class="w-full h-full">
+                <div id="txtBody2" contenteditable="true" data-placeholder="文章（後半）を入力…" class="v-text v-editor ${lineClass}" oninput="onTextChange()" onpaste="handlePaste(event)"></div>
+              </div>
             </div>
           </div>
         `;
       }
 
-      // Synchronize text & widths
-      syncMirrors();
-      snapTextareaWidths();
+      restoreTextValues();
+      setupResizeObserver();
       updateCharCount();
     }
 
-    // Material Component Builder
-    function renderMaterialSlot(index, heightClass = '') {
-      const mat = state.materials[index] || { title: `資料${index+1}`, image: '' };
+    // ResizeObserver で本文幅を行高(--line-h)の整数倍にスナップ
+    function setupResizeObserver() {
+      const lineH = fontSpecs[state.fontSize].line;
+      resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+          const parentWidth = entry.contentRect.width;
+          if (parentWidth > 0) {
+            const snappedWidth = Math.floor(parentWidth / lineH) * lineH;
+            const editor = entry.target.querySelector('.v-editor');
+            if (editor && snappedWidth > 0) {
+              editor.style.width = `${snappedWidth}px`;
+            }
+          }
+        }
+      });
+
+      const c1 = document.getElementById('bodyBoxContainer1');
+      if (c1) resizeObserver.observe(c1);
+      const c2 = document.getElementById('bodyBoxContainer2');
+      if (c2) resizeObserver.observe(c2);
+    }
+
+    // フォーカス補助
+    function focusEditor(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.focus();
+      }
+    }
+
+    // 資料スロット用コンポーネント生成
+    function renderMaterialSlot(index) {
+      const mat = state.materials[index] || { title: `資料${index === 0 ? '①' : '②'}`, image: '', source: '', fit: 'contain' };
       const hasImage = !!mat.image;
+      const objectFitClass = mat.fit === 'cover' ? 'object-cover' : 'object-contain';
 
       return `
-        <div class="w-full ${heightClass} flex flex-col justify-between border border-slate-300 rounded p-2 bg-slate-50/50 relative group ${!hasImage ? 'empty-slot-print' : ''}">
-          
-          <!-- Image Container -->
-          <div 
-            onclick="triggerFileInput(${index})"
-            ondragover="handleDragOver(event)"
-            ondrop="handleDrop(event, ${index})"
-            class="flex-1 border-2 border-dashed ${hasImage ? 'border-transparent bg-white' : 'border-slate-300 hover:border-slate-400 bg-white/60'} rounded flex items-center justify-center overflow-hidden cursor-pointer relative transition"
-          >
-            ${hasImage ? `
-              <img src="${mat.image}" class="w-full h-full object-contain" alt="${escapeHTML(mat.title)}">
-              
-              <!-- Hover Remove Button (No Print) -->
-              <button 
-                onclick="event.stopPropagation(); removeImage(${index})" 
-                title="画像を削除" 
-                class="no-print absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition bg-slate-900/80 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold z-10 shadow"
-              >
-                ✕
-              </button>
-            ` : `
-              <div class="text-center p-2 select-none placeholder-text-print">
-                <div class="text-xl text-slate-400 mb-0.5">📷</div>
-                <p class="text-xs font-bold text-slate-500">クリック / ドロップで画像挿入</p>
-                <p class="text-[10px] text-slate-400 mt-0.5">（Ctrl+V で貼り付けも可能）</p>
-              </div>
-            `}
-          </div>
-
-          <!-- Title Input -->
-          <div class="mt-1.5 shrink-0 flex items-center border-t border-slate-200/60 pt-1">
+        <div 
+          onclick="selectMaterialSlot(${index})"
+          class="w-full h-full flex flex-col justify-between border border-slate-300 rounded p-2 bg-slate-50/50 relative group ${!hasImage ? 'empty-slot-print' : 'print-border-none'}"
+        >
+          <!-- 1. 見出し入力 -->
+          <div class="shrink-0 mb-1 border-b border-slate-200 pb-0.5">
             <input 
               type="text" 
               value="${escapeHTML(mat.title)}" 
               oninput="updateMaterialTitle(${index}, this.value)" 
-              placeholder="資料タイトル" 
-              class="w-full bg-transparent font-bold text-xs text-slate-700 outline-none text-center placeholder:text-slate-400 placeholder:font-normal"
+              placeholder="見出し（例：資料①）" 
+              class="w-full bg-transparent font-bold text-xs text-slate-700 outline-none print-hide-placeholder"
             >
           </div>
 
+          <!-- 2. 画像プレビュー / ドロップエリア -->
+          <div 
+            onclick="triggerFileInput(${index})"
+            ondragover="handleDragOver(event)"
+            ondrop="handleDrop(event, ${index})"
+            class="flex-1 border border-dashed ${hasImage ? 'border-transparent bg-white' : 'border-slate-300 hover:border-slate-400 bg-white/60'} rounded flex items-center justify-center overflow-hidden cursor-pointer relative transition"
+          >
+            ${hasImage ? `
+              <img src="${mat.image}" class="w-full h-full ${objectFitClass}" alt="${escapeHTML(mat.title)}">
+              <div class="no-print absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition flex items-center gap-1 bg-slate-900/80 p-1 rounded-lg z-10">
+                <button 
+                  onclick="event.stopPropagation(); toggleImageFit(${index})" 
+                  title="全体表示 / 枠いっぱい 切り替え" 
+                  class="text-white text-[10px] bg-slate-700 hover:bg-slate-600 px-1.5 py-0.5 rounded font-sans"
+                >
+                  ${mat.fit === 'cover' ? '全体' : '拡大'}
+                </button>
+                <button 
+                  onclick="event.stopPropagation(); removeImage(${index})" 
+                  title="画像を削除" 
+                  class="text-white text-[10px] bg-red-600 hover:bg-red-500 px-1.5 py-0.5 rounded font-sans font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            ` : `
+              <div class="text-center p-2 select-none print-hide-placeholder">
+                <div class="text-xl text-slate-400 mb-0.5">📷</div>
+                <p class="text-xs font-bold text-slate-500">画像を選択 / ドロップ</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">（Ctrl+V で貼付け可能）</p>
+              </div>
+            `}
+          </div>
+
+          <!-- 3. 出典・参考欄 -->
+          <div class="mt-1 shrink-0 border-t border-slate-200/60 pt-0.5">
+            <input 
+              type="text" 
+              value="${escapeHTML(mat.source)}" 
+              oninput="updateMaterialSource(${index}, this.value)" 
+              placeholder="出典・参考（例：環境省データより作成）" 
+              class="w-full bg-transparent text-[11px] text-slate-500 outline-none placeholder:text-slate-400 print-hide-placeholder"
+            >
+          </div>
         </div>
       `;
     }
 
-    // Precise Width Snapping to Prevent Grid Sub-pixel Drift
-    function snapTextareaWidths() {
-      const lineH = fontSpecs[state.fontSize].line;
-      ['bodyBox1', 'bodyBox2'].forEach(boxId => {
-        const box = document.getElementById(boxId);
-        if (!box) return;
-        const ta = box.querySelector('textarea');
-        const mirror = box.querySelector('.print-mirror');
-        if (!ta) return;
-
-        const availableW = box.clientWidth;
-        const snappedW = Math.max(lineH, Math.floor(availableW / lineH) * lineH);
-        
-        ta.style.width = `${snappedW}px`;
-        if (mirror) mirror.style.width = `${snappedW}px`;
-      });
+    // 1行固定欄の Enter 改行制御
+    function handleSingleLineKeydown(e) {
+      if (e.key === 'Enter' && !e.isComposing) {
+        e.preventDefault();
+      }
     }
 
-    // Text Sync between Textarea and Print Mirror
+    // ペースト処理（プレーンテキスト化）
+    function handlePaste(e) {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, text);
+      onTextChange();
+    }
+
+    // 入力テキスト同期
     function onTextChange() {
       const elTitle = document.getElementById('txtTitle');
       const elAuthor = document.getElementById('txtAuthor');
       const elBody1 = document.getElementById('txtBody1');
       const elBody2 = document.getElementById('txtBody2');
 
-      if (elTitle) state.title = elTitle.value;
-      if (elAuthor) state.author = elAuthor.value;
-      if (elBody1) state.body1 = elBody1.value;
-      if (elBody2) state.body2 = elBody2.value;
+      if (elTitle) state.title = elTitle.innerText;
+      if (elAuthor) state.author = elAuthor.innerText;
+      if (elBody1) state.body1 = elBody1.innerText;
+      if (elBody2) state.body2 = elBody2.innerText;
 
-      syncMirrors();
       updateCharCount();
       saveState();
     }
 
-    function syncMirrors() {
-      const mTitle = document.getElementById('mirrorTitle');
-      const mAuthor = document.getElementById('mirrorAuthor');
-      const mBody1 = document.getElementById('mirrorBody1');
-      const mBody2 = document.getElementById('mirrorBody2');
+    function restoreTextValues() {
+      const elTitle = document.getElementById('txtTitle');
+      const elAuthor = document.getElementById('txtAuthor');
+      const elBody1 = document.getElementById('txtBody1');
+      const elBody2 = document.getElementById('txtBody2');
 
-      if (mTitle) mTitle.textContent = state.title;
-      if (mAuthor) mAuthor.textContent = state.author;
-      if (mBody1) mBody1.textContent = state.body1;
-      if (mBody2) mBody2.textContent = state.body2;
+      if (elTitle && state.title) elTitle.innerText = state.title;
+      if (elAuthor && state.author) elAuthor.innerText = state.author;
+      if (elBody1 && state.body1) elBody1.innerText = state.body1;
+      if (elBody2 && state.body2) elBody2.innerText = state.body2;
     }
 
     function updateCharCount() {
       const count1 = (state.body1 || '').replace(/\s/g, '').length;
       const count2 = (state.body2 || '').replace(/\s/g, '').length;
-      document.getElementById('charCount').innerText = count1 + count2;
+      const total = count1 + count2;
+      const el = document.getElementById('charCount');
+      if (el) el.innerText = total;
     }
 
-    // Image Upload Handlers
+    // 画像操作・ファイル取り込み
+    function selectMaterialSlot(index) {
+      selectedMaterialIndex = index;
+    }
+
     function triggerFileInput(index) {
       activeMaterialIndex = index;
+      selectedMaterialIndex = index;
       document.getElementById('imageInput').click();
     }
 
@@ -526,15 +674,16 @@
       }
     }
 
-    function setupPasteListener() {
+    function setupGlobalPaste() {
       window.addEventListener('paste', (e) => {
+        if (document.activeElement && document.activeElement.getAttribute('contenteditable') === 'true') {
+          return;
+        }
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         for (let item of items) {
           if (item.type.indexOf('image') !== -1) {
             const file = item.getAsFile();
-            let targetIdx = state.materials.findIndex(m => !m.image);
-            if (targetIdx === -1) targetIdx = 0;
-            processImageFile(file, targetIdx);
+            processImageFile(file, selectedMaterialIndex);
             break;
           }
         }
@@ -552,8 +701,20 @@
       reader.readAsDataURL(file);
     }
 
+    function toggleImageFit(index) {
+      const current = state.materials[index].fit || 'contain';
+      state.materials[index].fit = current === 'contain' ? 'cover' : 'contain';
+      saveState();
+      render();
+    }
+
     function updateMaterialTitle(index, val) {
       state.materials[index].title = val;
+      saveState();
+    }
+
+    function updateMaterialSource(index, val) {
+      state.materials[index].source = val;
       saveState();
     }
 
@@ -563,7 +724,7 @@
       render();
     }
 
-    // Controls
+    // 設定変更
     function setLayout(val) {
       state.layout = val;
       saveState();
@@ -583,45 +744,47 @@
     }
 
     function clearAll() {
-      if (confirm('入力した文章と資料を消して、白紙に戻しますか？')) {
+      if (confirm('すべての文章と画像をクリアして白紙に戻しますか？')) {
         state.title = '';
         state.author = '';
         state.body1 = '';
         state.body2 = '';
         state.materials = [
-          { title: '資料①', image: '' },
-          { title: '資料②', image: '' }
+          { title: '資料①', image: '', source: '', fit: 'contain' },
+          { title: '資料②', image: '', source: '', fit: 'contain' }
         ];
         saveState();
         render();
       }
     }
 
-    // Storage
+    // ストレージ保存
     function saveState() {
       try {
-        localStorage.setItem('tategaki_perfect_sheet_state', JSON.stringify(state));
+        localStorage.setItem('tategaki_sheet_v4', JSON.stringify(state));
       } catch (err) {
-        console.warn('LocalStorage save limit reached.', err);
+        console.warn('LocalStorage save failed:', err);
       }
     }
 
     function loadState() {
       try {
-        const saved = localStorage.getItem('tategaki_perfect_sheet_state');
+        const saved = localStorage.getItem('tategaki_sheet_v4');
         if (saved) {
           const parsed = JSON.parse(saved);
           Object.assign(state, parsed);
-          document.getElementById('layoutSelect').value = state.layout || 'left2';
-          document.getElementById('fontSizeSelect').value = state.fontSize || 'md';
-          document.getElementById('linesToggle').checked = state.showLines !== false;
+          const elL = document.getElementById('layoutSelect');
+          const elF = document.getElementById('fontSizeSelect');
+          const elT = document.getElementById('linesToggle');
+          if (elL) elL.value = state.layout || 'left2';
+          if (elF) elF.value = state.fontSize || 'md';
+          if (elT) elT.checked = state.showLines !== false;
         }
       } catch (err) {
-        console.warn('LocalStorage load error:', err);
+        console.warn('LocalStorage load failed:', err);
       }
     }
 
-    // Helper
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -633,5 +796,4 @@
     }
   </script>
 
-</body>
-</html>
+</body></html>
